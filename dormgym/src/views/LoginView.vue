@@ -60,7 +60,7 @@
               <input
                 v-model="form.email"
                 type="email"
-                placeholder="ime.prezime@sczg.hr"
+                placeholder="ime.prezime@scpu.hr"
                 autocomplete="email"
                 @input="clearFieldError('email')"
                 :disabled="auth.isLoading"
@@ -143,11 +143,7 @@
 
       <!-- Footer link -->
       <div class="footer-link">
-        <svg viewBox="0 0 20 20" fill="none">
-          <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M10 9v6M10 6.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-        <a href="#">Upute za nove korisnike</a>
+        <router-link to="/upute">ⓘ Upute za nove korisnike</router-link>
       </div>
 
       <!-- System label -->

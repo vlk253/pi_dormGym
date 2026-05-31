@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
-
+import UserGuide from '../views/UserGuide.vue'
 const routes = [
   {
     path: '/',
@@ -23,7 +23,13 @@ const routes = [
   {
     path: '/:pathMatch(.*)*',
     redirect: '/'
-  }
+  },
+  {
+  path: '/upute',
+  name: 'UserGuide',
+  component: () => import('../views/UserGuide.vue'),
+  meta: { requiresAuth: false }
+},
 ]
 
 const router = createRouter({
