@@ -15,7 +15,7 @@
           <strong>{{ auth.profile?.name }}</strong>
         </div>
         <div class="setting-row">
-          <span>Email</span>
+          <span>E-mail</span>
           <strong>{{ auth.profile?.email }}</strong>
         </div>
         <div class="setting-row">
@@ -33,16 +33,9 @@
           <span class="badge badge-green">Aktivno</span>
         </div>
         <div class="setting-row">
-          <span>Automatski termini</span>
+          <span>Tamna tema</span>
           <label class="toggle">
-            <input type="checkbox" v-model="autoSlots" />
-            <span class="toggle-track"/>
-          </label>
-        </div>
-        <div class="setting-row">
-          <span>Email upozorenja</span>
-          <label class="toggle">
-            <input type="checkbox" v-model="emailAlert" />
+            <input type="checkbox" :checked="isDark" @change="toggleTheme" />
             <span class="toggle-track"/>
           </label>
         </div>
@@ -61,14 +54,26 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
 const router = useRouter()
-const autoSlots = ref(true)
-const emailAlert = ref(true)
+const isDark = ref(false)
+
+onMounted(() => {
+  const saved = localStorage.getItem('theme') || 'light'
+  isDark.value = saved === 'dark'
+  document.documentElement.setAttribute('data-theme', saved)
+})
+
+function toggleTheme() {
+  isDark.value = !isDark.value
+  const theme = isDark.value ? 'dark' : 'light'
+  document.documentElement.setAttribute('data-theme', theme)
+  localStorage.setItem('theme', theme)
+}
 
 async function handleLogout() {
   await auth.logout()
