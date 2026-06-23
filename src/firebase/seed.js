@@ -1,10 +1,22 @@
-// src/firebase/seed.js
-// Pokreni jednom da postaviš inicijalne podatke u Firestore
+// Pokretanje jednom da se postave inicijalne podatke u Firestore
 // node src/firebase/seed.js  (ili pozovi iz konzole)
-
-import { db } from './config.js'
+import { db, auth } from './config.js'
 import { collection, doc, setDoc, Timestamp } from 'firebase/firestore'
+import { signInWithEmailAndPassword } from 'firebase/auth'
 
+// Prijavi se kao admin prije seeda
+await signInWithEmailAndPassword(auth, 'teo@scpu.hr', '12345678')
+
+// ... ostatak koda
+console.log("SEED START")
+function formatLocalDate(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+console.log("slots done")
+console.log("users done")
 const today = new Date()
 
 // Generira slotove za danas + 7 dana
@@ -12,7 +24,7 @@ async function seedSlots() {
   for (let d = 0; d < 7; d++) {
     const date = new Date(today)
     date.setDate(today.getDate() + d)
-    const dateStr = date.toISOString().split('T')[0] // "2025-06-03"
+    const dateStr = formatLocalDate(date) // "2025-06-03"
 
     const slots = [
       { id: `${dateStr}_0700`, startTime: '07:00', endTime: '08:00', capacity: 5, enrolled: [] },
@@ -45,7 +57,8 @@ async function seedSlots() {
   }
   console.log('✅ Slots seeded!')
 }
-
+console.log("slots done")
+console.log("users done")
 // Kreiraj testne korisnike
 async function seedUsers() {
   const testUsers = [
@@ -88,7 +101,8 @@ async function seedUsers() {
   }
   console.log('✅ Test users seeded!')
 }
-
+console.log("slots done")
+console.log("users done")
 // Prijavi testne studente na neke slotove
 async function enrollTestStudents() {
   const today = new Date().toISOString().split('T')[0]
@@ -114,7 +128,8 @@ async function enrollTestStudents() {
   
   console.log('✅ Test students enrolled!')
 }
-
+console.log("slots done")
+console.log("users done")
 async function runSeed() {
   try {
     await seedSlots()
