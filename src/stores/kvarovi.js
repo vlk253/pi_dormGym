@@ -6,6 +6,7 @@ import {
   serverTimestamp, query, orderBy, onSnapshot
 } from 'firebase/firestore'
 import { db } from '@/firebase/config'
+import { useAuthStore } from '@/stores/auth'
 
 export const useKvaroviStore = defineStore('kvarovi', () => {
   const kvarovi = ref([])
@@ -26,8 +27,12 @@ export const useKvaroviStore = defineStore('kvarovi', () => {
   }
 
   async function prijaviKvar(data) {
+    // include reporter metadata from auth store when available
+    const auth = useAuthStore()
+    const reporter = auth.profile ? { id: auth.profile.id, name: auth.profile.name, email: auth.profile.email } : null
     await addDoc(collection(db, 'kvarovi'), {
       ...data,
+      reporter,
       popravljeno: false,
       createdAt: serverTimestamp()
     })
