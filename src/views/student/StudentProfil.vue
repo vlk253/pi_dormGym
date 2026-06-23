@@ -27,6 +27,13 @@
             <span class="toggle-track"/>
           </label>
         </div>
+        <div class="setting-row">
+          <span>Tamna tema</span>
+          <label class="toggle">
+            <input type="checkbox" :checked="isDark" @change="toggleTheme" />
+            <span class="toggle-track"/>
+          </label>
+        </div>
       </div>
     </div>
 
@@ -66,9 +73,16 @@ const slotsStore = useSlotsStore()
 const router = useRouter()
 const emailNotifs = ref(true)
 const pushNotifs = ref(false)
+const isDark = ref(false)
 const stats = ref({ total: 0, thisMonth: 0 })
 
 onMounted(async () => {
+  // Učitaj temu
+  const saved = localStorage.getItem('theme') || 'light'
+  isDark.value = saved === 'dark'
+  document.documentElement.setAttribute('data-theme', saved)
+
+  // Učitaj statistiku
   const res = await slotsStore.fetchMyReservations(auth.user.uid)
   const thisMonth = new Date().toISOString().slice(0, 7)
   stats.value = {
@@ -76,6 +90,13 @@ onMounted(async () => {
     thisMonth: res.filter(r => r.date.startsWith(thisMonth)).length
   }
 })
+
+function toggleTheme() {
+  isDark.value = !isDark.value
+  const theme = isDark.value ? 'dark' : 'light'
+  document.documentElement.setAttribute('data-theme', theme)
+  localStorage.setItem('theme', theme)
+}
 
 async function handleLogout() {
   await auth.logout()
