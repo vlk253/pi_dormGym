@@ -1,21 +1,8 @@
 <template>
   <div class="page-content">
-    <!-- Postavke Kapaciteta -->
+    <!-- Dummy slanje Obavijesti -->
     <section class="card">
-      <div class="card-header">
-        <h2 class="section-title">Postavke Kapaciteta</h2>
-        <span class="badge badge-blue">{{ capacity }}</span>
-      </div>
-      <p class="section-desc">Postavite maksimalan broj studenata dozvoljen u jednom terminu (Globalni limit).</p>
-      <div class="slider-wrap">
-        <input type="range" min="5" max="50" v-model.number="capacity" class="slider" @change="saveCapacity" />
-        <div class="slider-labels"><span>5 OSOBA</span><span>50 OSOBA</span></div>
-      </div>
-    </section>
-
-    <!-- Slanje Obavijesti -->
-    <section class="card">
-      <h2 class="section-title">Slanje Obavijesti</h2>
+      <h2 class="section-title">Slanje Obavijesti (Dummy feature)</h2>
       <label class="field-label">RAZLOG OTKAZIVANJA</label>
       <div class="chip-group">
         <button
@@ -34,6 +21,8 @@
         {{ sending ? 'Slanje...' : 'Pošalji svima' }}
       </button>
     </section>
+
+    
 
     <!-- Aktivni Kvarovi -->
     <AktivniKvarovi ref="aktivniKvaroviRef" />
