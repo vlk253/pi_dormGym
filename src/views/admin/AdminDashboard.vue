@@ -1,5 +1,36 @@
 <template>
   <div class="page-shell">
+
+    <!-- DESKTOP SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-mark">DG</div>
+        <span class="sidebar-logo-text">DormGym</span>
+      </div>
+
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">{{ auth.profile?.avatarInitials || 'AD' }}</div>
+        <div>
+          <div class="sidebar-user-name">{{ auth.profile?.name }}</div>
+          <div class="sidebar-user-role">Administrator</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button
+          v-for="item in navItems"
+          :key="item.path"
+          class="sidebar-item"
+          :class="{ active: route.path.startsWith(item.path) }"
+          @click="router.push(item.path)"
+        >
+          <component :is="item.icon" />
+          {{ item.label }}
+        </button>
+      </nav>
+    </aside>
+
+    <!-- MOBILE TOP HEADER -->
     <header class="page-header">
       <div class="header-left">
         <div class="avatar-circle admin">{{ auth.profile?.avatarInitials || 'AD' }}</div>
@@ -8,11 +39,13 @@
           <div class="header-role">Administrator</div>
         </div>
       </div>
-      <span class="logo-badge admin">DoreGym</span>
+      <span class="logo-badge admin">DormGym</span>
     </header>
 
+    <!-- PAGE CONTENT -->
     <RouterView />
 
+    <!-- MOBILE BOTTOM NAV -->
     <nav class="bottom-nav">
       <button
         v-for="item in navItems"
@@ -25,6 +58,7 @@
         <span>{{ item.label }}</span>
       </button>
     </nav>
+
   </div>
 </template>
 
@@ -38,12 +72,19 @@ const route = useRoute()
 const router = useRouter()
 
 const IconNadzor = () => h('svg', { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
-  h('rect', { x: 3, y: 3, width: 7, height: 7 }), h('rect', { x: 14, y: 3, width: 7, height: 7 }),
-  h('rect', { x: 14, y: 14, width: 7, height: 7 }), h('rect', { x: 3, y: 14, width: 7, height: 7 }),
+  h('rect', { x: 3, y: 3, width: 7, height: 7 }),
+  h('rect', { x: 14, y: 3, width: 7, height: 7 }),
+  h('rect', { x: 14, y: 14, width: 7, height: 7 }),
+  h('rect', { x: 3, y: 14, width: 7, height: 7 }),
 ])
 const IconStats = () => h('svg', { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
-  h('line', { x1: 18, y1: 20, x2: 18, y2: 10 }), h('line', { x1: 12, y1: 20, x2: 12, y2: 4 }),
+  h('line', { x1: 18, y1: 20, x2: 18, y2: 10 }),
+  h('line', { x1: 12, y1: 20, x2: 12, y2: 4 }),
   h('line', { x1: 6, y1: 20, x2: 6, y2: 14 }),
+])
+const IconKartica = () => h('svg', { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
+  h('rect', { x: 2, y: 5, width: 20, height: 14, rx: 2 }),
+  h('line', { x1: 2, y1: 10, x2: 22, y2: 10 }),
 ])
 const IconProfil = () => h('svg', { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
   h('path', { d: 'M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' }),
@@ -51,9 +92,10 @@ const IconProfil = () => h('svg', { width: 20, height: 20, viewBox: '0 0 24 24',
 ])
 
 const navItems = [
-  { path: '/admin/nadzor', label: 'Upravljanje', icon: IconNadzor },
-  { path: '/admin/statistika', label: 'Statistika', icon: IconStats },
-  { path: '/admin/profil', label: 'Profil', icon: IconProfil },
+  { path: '/admin/nadzor',    label: 'Upravljanje', icon: IconNadzor },
+  { path: '/admin/statistika', label: 'Statistika',  icon: IconStats },
+  { path: '/admin/kartica',   label: 'Kartica',     icon: IconKartica },
+  { path: '/admin/profil',    label: 'Profil',      icon: IconProfil },
 ]
 </script>
 
