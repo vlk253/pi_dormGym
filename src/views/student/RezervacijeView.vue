@@ -43,17 +43,18 @@
         </div>
         <div class="slot-right">
           <span class="slot-badge" :class="slotStatus(slot)">
-            {{ slotStatus(slot) === 'full' ? 'Popunjeno' : slotStatus(slot) === 'enrolled' ? 'Prijavljeno' : 'Slobodno' }}
+            {{ slotStatus(slot) === 'full' ? 'Popunjeno' : slotStatus(slot) === 'enrolled' ? 'Prijavljeno' : slotStatus(slot) === 'past' ? 'Prošlo' : 'Slobodno' }}
           </span>
           <button
             class="slot-btn"
             :class="slotStatus(slot)"
-            :disabled="slotStatus(slot) === 'full' || actionLoading === slot.id"
+            :disabled="slotStatus(slot) === 'full' || slotStatus(slot) === 'past' || actionLoading === slot.id"
             @click="toggleSlot(slot)"
           >
             <span v-if="actionLoading === slot.id" class="btn-spinner" />
             <span v-else-if="slotStatus(slot) === 'enrolled'">Odjavi se</span>
             <span v-else-if="slotStatus(slot) === 'full'">Popunjeno</span>
+            <span v-else-if="slotStatus(slot) === 'past'">Prošlo</span>
             <span v-else>Prijavi se</span>
           </button>
         </div>
@@ -68,7 +69,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useSlotsStore } from '@/stores/slots'
 import { useAuthStore } from '@/stores/auth'
 
@@ -77,12 +78,25 @@ const auth = useAuthStore()
 const actionLoading = ref(null)
 const toast = ref(null)
 
+function formatLocalDate(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function isSlotPast(slot) {
+  const now = new Date()
+  const slotDateTime = new Date(`${slot.date}T${slot.startTime}:00`)
+  return slotDateTime <= now
+}
+
 // Build 7-day date strip
 const dateOptions = Array.from({ length: 7 }, (_, i) => {
   const d = new Date()
   d.setDate(d.getDate() + i)
   return {
-    value: d.toISOString().split('T')[0],
+    value: formatLocalDate(d),
     day: d.toLocaleDateString('hr', { weekday: 'short' }),
     num: d.getDate()
   }
@@ -92,16 +106,30 @@ const selectedDate = ref(dateOptions[0].value)
 function selectDate(date) {
   selectedDate.value = date
   slotsStore.listenToDate(date)
+  slotsStore.fetchDateSlots(date)
 }
 
-onMounted(() => slotsStore.listenToDate(selectedDate.value))
+onMounted(() => {
+  slotsStore.listenToDate(selectedDate.value)
+  slotsStore.fetchDateSlots(selectedDate.value)
+})
 onUnmounted(() => slotsStore.stopListening())
 
+const suggestedSlots = computed(() => {
+  return slotsStore.slots
+    .filter(s => s.date === selectedDate.value)
+    .filter(s => s.enrolled.length < s.capacity && !s.enrolled.includes(auth.user?.uid))
+    .sort((a, b) => a.startTime.localeCompare(b.startTime))
+    .slice(0, 3)
+})
+
 function slotStatus(slot) {
+  if (isSlotPast(slot)) return 'past'
   if (slot.enrolled.includes(auth.user?.uid)) return 'enrolled'
   if (slot.enrolled.length >= slot.capacity) return 'full'
   return 'free'
 }
+
 function fillPct(slot) { return Math.min((slot.enrolled.length / slot.capacity) * 100, 100) }
 function fillColor(slot) {
   const p = fillPct(slot)
@@ -111,13 +139,17 @@ function fillColor(slot) {
 }
 
 async function toggleSlot(slot) {
+  if (isSlotPast(slot)) {
+    showToast('Ne možeš se prijaviti na prošli termin.', 'error')
+    return
+  }
   actionLoading.value = slot.id
   try {
     if (slotStatus(slot) === 'enrolled') {
-      await slotsStore.unenrollSlot(slot.id)
+      await slotsStore.unenrollSlot(slot.id, auth.user.uid)
       showToast('Odjavljen si s termina.', 'info')
     } else {
-      await slotsStore.enrollSlot(slot.id)
+      await slotsStore.enrollSlot(slot.id, auth.user.uid)
       showToast('Uspješno prijavljen na termin!', 'success')
     }
   } catch (e) {
@@ -166,6 +198,7 @@ function showToast(msg, type = 'success') {
 }
 .slot-card.enrolled { border-left-color: var(--blue); }
 .slot-card.full { border-left-color: var(--red); opacity: 0.7; }
+.slot-card.past { border-left-color: var(--muted); opacity: 0.5; }
 
 .slot-left { flex: 1; min-width: 0; }
 .slot-time { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
@@ -179,6 +212,7 @@ function showToast(msg, type = 'success') {
 .slot-badge.free { color: var(--green); }
 .slot-badge.enrolled { color: var(--blue); }
 .slot-badge.full { color: var(--red); }
+.slot-badge.past { color: var(--muted); }
 
 .slot-btn {
   padding: 8px 14px; border-radius: 8px; border: none;
@@ -189,6 +223,7 @@ function showToast(msg, type = 'success') {
 .slot-btn.free:hover { background: var(--blue-dark); }
 .slot-btn.enrolled { background: var(--red-light); color: var(--red); }
 .slot-btn.full { background: var(--bg); color: var(--muted); cursor: not-allowed; }
+.slot-btn.past { background: var(--bg); color: var(--muted); cursor: not-allowed; }
 .slot-btn:disabled { cursor: not-allowed; opacity: 0.6; }
 
 .btn-spinner {
@@ -196,6 +231,7 @@ function showToast(msg, type = 'success') {
   border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
   border-radius: 50%; animation: spin 0.7s linear infinite;
 }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .toast {
   position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
