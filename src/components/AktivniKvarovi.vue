@@ -2,18 +2,18 @@
   <section class="card kvarovi-card">
     <div class="kvarovi-header">
       <h2 class="section-title">Aktivni Kvarovi</h2>
-      <span class="badge badge-red">{{ kvaroviStore.aktivni().length }} PRIJAVE</span>
+      <span class="badge badge-red">{{ vidljiviKvarovi.filter(k => !k.popravljeno).length }} PRIJAVE</span>
     </div>
 
     <div v-if="kvaroviStore.loading" class="center-spinner"><div class="spinner"/></div>
 
-    <div v-else-if="kvaroviStore.kvarovi.length === 0" class="empty-state">
+    <div v-else-if="vidljiviKvarovi.length === 0" class="empty-state">
       <p>Nema aktivnih kvarova 🎉</p>
     </div>
 
     <div v-else class="kvar-list">
       <div
-        v-for="kvar in kvaroviStore.kvarovi" :key="kvar.id"
+        v-for="kvar in vidljiviKvarovi" :key="kvar.id"
         class="kvar-item" :class="{ resolved: kvar.popravljeno }"
       >
         <div class="kvar-icon" :class="`tip-${kvar.tip}`">
@@ -25,21 +25,28 @@
             <span class="kvar-vrijeme">{{ formatTime(kvar.createdAt) }}</span>
           </div>
           <p class="kvar-opis">{{ kvar.opis }}</p>
+
+          <!-- Admin vidi tko je prijavio -->
+          <div v-if="authStore.isAdmin && kvar.reporter" class="kvar-meta">
+            <small>Prijavio: <strong>{{ kvar.reporter.name }}</strong> ({{ kvar.reporter.email }})</small>
+          </div>
+
           <div class="kvar-actions">
-            <button
-              class="btn-oznaci" :class="{ done: kvar.popravljeno }"
-              @click="oznaciPopravljeno(kvar.id)" :disabled="kvar.popravljeno"
-            >
-              {{ kvar.popravljeno ? '✓ POPRAVLJENO' : 'OZNACI KAO POPRAVLJENO' }}
-            </button>
-            <button class="btn-detalji" @click="selectedKvar = kvar">DETALJI</button>
+            <template v-if="authStore.isAdmin">
+              <button
+                class="btn-oznaci" :class="{ done: kvar.popravljeno }"
+                @click="oznaciPopravljeno(kvar.id)" :disabled="kvar.popravljeno"
+              >
+                {{ kvar.popravljeno ? '✓ POPRAVLJENO' : 'OZNACI KAO POPRAVLJENO' }}
+              </button>
+            </template>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Add kvar form -->
-    <div class="add-kvar-wrap">
+    <!-- Forma za prijavu kvara - samo studenti -->
+    <div v-if="authStore.isStudent" class="add-kvar-wrap">
       <button class="btn-add-kvar" @click="showForm = !showForm">
         {{ showForm ? '✕ Otkaži' : '+ Prijavi novi kvar' }}
       </button>
@@ -59,38 +66,35 @@
         </div>
       </Transition>
     </div>
-
-    <!-- Detail modal -->
-    <div v-if="selectedKvar" class="modal-overlay" @click.self="selectedKvar = null">
-      <div class="modal">
-        <div class="modal-header">
-          <h3>{{ selectedKvar.naziv }}</h3>
-          <button class="modal-close" @click="selectedKvar = null">✕</button>
-        </div>
-        <p class="modal-opis">{{ selectedKvar.opis }}</p>
-        <div class="modal-meta">
-          <div class="meta-row"><span>Tip:</span><strong>{{ selectedKvar.tip }}</strong></div>
-          <div class="meta-row"><span>Prijavljeno:</span><strong>{{ formatTime(selectedKvar.createdAt) }}</strong></div>
-          <div class="meta-row"><span>Status:</span><strong>{{ selectedKvar.popravljeno ? '✓ Popravljeno' : '⚠️ Aktivno' }}</strong></div>
-        </div>
-        <button class="btn-primary" @click="selectedKvar = null">Zatvori</button>
-      </div>
-    </div>
   </section>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useKvaroviStore } from '@/stores/kvarovi'
+import { useAuthStore } from '@/stores/auth'
+
+const props = defineProps({
+  studentOnly: { type: Boolean, default: false },
+  studentId: { type: String, default: null }
+})
 
 const kvaroviStore = useKvaroviStore()
-const selectedKvar = ref(null)
+const authStore = useAuthStore()
 const showForm = ref(false)
 const submitting = ref(false)
 const newKvar = ref({ naziv: '', opis: '', tip: 'mehanicar' })
 
 onMounted(() => kvaroviStore.listenToKvarovi())
 onUnmounted(() => kvaroviStore.stopListening())
+
+// Student vidi samo svoje, admin vidi sve
+const vidljiviKvarovi = computed(() => {
+  if (props.studentOnly && props.studentId) {
+    return kvaroviStore.kvarovi.filter(k => k.reporter?.id === props.studentId)
+  }
+  return kvaroviStore.kvarovi
+})
 
 async function oznaciPopravljeno(id) {
   await kvaroviStore.oznaciPopravljeno(id)
@@ -118,7 +122,6 @@ function formatTime(ts) {
   return `PRIJE ${Math.round(diff / 86400)} DAN/A`
 }
 
-// Exposed for parent ref
 defineExpose({ kvarovi: kvaroviStore.kvarovi, refreshKvarovi: kvaroviStore.listenToKvarovi })
 </script>
 
@@ -151,16 +154,15 @@ defineExpose({ kvarovi: kvaroviStore.kvarovi, refreshKvarovi: kvaroviStore.liste
 .kvar-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
 .kvar-naziv { font-weight: 700; font-size: 14px; }
 .kvar-vrijeme { font-size: 11px; color: var(--muted); }
-.kvar-opis { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+.kvar-opis { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 6px; }
+.kvar-meta { margin-bottom: 8px; font-size: 12px; color: var(--muted); }
 .kvar-actions { display: flex; gap: 14px; }
 .btn-oznaci {
   font-size: 11px; font-weight: 700; color: var(--blue);
   background: none; border: none; cursor: pointer; padding: 0;
 }
 .btn-oznaci.done { color: var(--green); cursor: default; }
-.btn-detalji { font-size: 11px; font-weight: 700; color: var(--muted); background: none; border: none; cursor: pointer; }
 
-/* Add kvar */
 .add-kvar-wrap { margin-top: 14px; }
 .btn-add-kvar {
   font-size: 13px; font-weight: 700; color: var(--blue);
@@ -170,29 +172,10 @@ defineExpose({ kvarovi: kvaroviStore.kvarovi, refreshKvarovi: kvaroviStore.liste
 .mini-input {
   width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
   padding: 10px 12px; font-size: 13px; font-family: inherit; outline: none;
-  background: #fff; resize: none;
+  background: #fff; resize: none; box-sizing: border-box;
 }
 .mini-input:focus { border-color: var(--blue); }
 .faq-enter-active, .faq-leave-active { transition: all 0.2s; overflow: hidden; }
 .faq-enter-from, .faq-leave-to { max-height: 0; opacity: 0; }
 .faq-enter-to, .faq-leave-from { max-height: 400px; opacity: 1; }
-
-/* Modal */
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-  display: flex; align-items: flex-end; justify-content: center; z-index: 100;
-}
-.modal {
-  background: #fff; border-radius: 20px 20px 0 0;
-  padding: 24px; width: 100%; max-width: 430px;
-  animation: slideUp 0.25s ease;
-}
-@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.modal-header h3 { font-size: 17px; font-weight: 700; }
-.modal-close { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--muted); }
-.modal-opis { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
-.modal-meta { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
-.meta-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
-.meta-row strong { color: var(--text); }
 </style>
