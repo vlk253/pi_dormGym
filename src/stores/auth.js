@@ -63,21 +63,24 @@ export const useAuthStore = defineStore('auth', () => {
     return profile.value?.role
   }
 
-  async function register(email, password, name) {
-    const cred = await createUserWithEmailAndPassword(auth, email, password)
-    user.value = cred.user
-    const role = getRoleFromEmail(email)
-    const profileData = {
-      name,
-      email,
-      role,
-      createdAt: serverTimestamp(),
-      avatarInitials: name.slice(0, 2).toUpperCase()
-    }
-    await setDoc(doc(db, 'users', cred.user.uid), profileData)
-    profile.value = { id: cred.user.uid, ...profileData }
-    return role
+ async function register(email, password, name, extra = {}) {
+  const cred = await createUserWithEmailAndPassword(auth, email, password)
+  user.value = cred.user
+  const role = getRoleFromEmail(email)
+  const profileData = {
+    name,
+    email,
+    role,
+    createdAt: serverTimestamp(),
+    avatarInitials: name.slice(0, 2).toUpperCase(),
+    approved: false, // admin treba odobriti
+    ...(role === 'admin' ? { ustanovaId: extra.ustanovaId } : {}),
+    ...(role === 'student' ? { paviljon: extra.paviljon, soba: extra.soba } : {})
   }
+  await setDoc(doc(db, 'users', cred.user.uid), profileData)
+  profile.value = { id: cred.user.uid, ...profileData }
+  return role
+}
 
   async function logout() {
     await signOut(auth)
