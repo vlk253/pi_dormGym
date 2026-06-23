@@ -46,6 +46,8 @@ const routes = [
       { path: 'nadzor', component: NadzorPage },
       { path: 'statistika', component: StatistikaView },
       { path: 'profil', component: AdminProfil },
+      { path: '/admin/kartica',   component: () => import('@/views/admin/KarticaSimulator.vue')
+}
     ]
   },
 
@@ -60,7 +62,7 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const auth = useAuthStore()
 
-  // Wait for auth to initialise on first load
+  // Čekanje da auth inicijalizira
   if (auth.loading) {
     await auth.initAuth()
   }
