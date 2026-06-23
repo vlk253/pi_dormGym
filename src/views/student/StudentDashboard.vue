@@ -1,6 +1,36 @@
 <template>
   <div class="page-shell">
-    <!-- Header -->
+
+    <!-- DESKTOP SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-mark">DG</div>
+        <span class="sidebar-logo-text">DormGym</span>
+      </div>
+
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" style="background: var(--blue);">{{ auth.profile?.avatarInitials || 'ST' }}</div>
+        <div>
+          <div class="sidebar-user-name">{{ auth.profile?.name }}</div>
+          <div class="sidebar-user-role">Student</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button
+          v-for="item in navItems"
+          :key="item.path"
+          class="sidebar-item"
+          :class="{ active: route.path === item.path }"
+          @click="router.push(item.path)"
+        >
+          <component :is="item.icon" />
+          {{ item.label }}
+        </button>
+      </nav>
+    </aside>
+
+    <!-- MOBILE TOP HEADER -->
     <header class="page-header">
       <div class="header-left">
         <div class="avatar-circle">{{ auth.profile?.avatarInitials || 'ST' }}</div>
@@ -10,14 +40,14 @@
         </div>
       </div>
       <div class="header-right">
-        <span class="logo-badge">DoreGym</span>
+        <span class="logo-badge">DormGym</span>
       </div>
     </header>
 
-    <!-- Child view -->
+    <!-- PAGE CONTENT -->
     <RouterView />
 
-    <!-- Bottom nav -->
+    <!-- MOBILE BOTTOM NAV -->
     <nav class="bottom-nav">
       <button
         v-for="item in navItems"
@@ -30,6 +60,7 @@
         <span>{{ item.label }}</span>
       </button>
     </nav>
+
   </div>
 </template>
 
@@ -42,7 +73,6 @@ const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 
-// Inline SVG icon components
 const IconCalendar = () => h('svg', { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2 }, [
   h('rect', { x: 3, y: 4, width: 18, height: 18, rx: 2 }),
   h('line', { x1: 16, y1: 2, x2: 16, y2: 6 }),
@@ -65,9 +95,9 @@ const IconProfil = () => h('svg', { width: 20, height: 20, viewBox: '0 0 24 24',
 
 const navItems = [
   { path: '/student/rezervacije', label: 'Rezervacije', icon: IconCalendar },
-  { path: '/student/moje', label: 'Moje', icon: IconMyRes },
-  { path: '/student/guide', label: 'Upute', icon: IconGuide },
-  { path: '/student/profil', label: 'Profil', icon: IconProfil },
+  { path: '/student/moje',        label: 'Moje',        icon: IconMyRes },
+  { path: '/student/guide',       label: 'Upute',       icon: IconGuide },
+  { path: '/student/profil',      label: 'Profil',      icon: IconProfil },
 ]
 </script>
 
