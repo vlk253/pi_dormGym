@@ -27,14 +27,14 @@ const firebaseConfig = {
 
 ### 4. Kreiraj admin korisnika
 U Firebase konzoli → Authentication → Add user:
-- Email: `admin@doregym.hr`
+- Email: `admin@scpu.hr`
 - Password: (tvoja lozinka)
 
 Zatim u Firestore → `users` kolekcija → novi dokument s ID = UID tog korisnika:
 ```json
 {
   "name": "Marko Marković",
-  "email": "admin@doregym.hr",
+  "email": "admin@scpu.hr",
   "role": "admin",
   "avatarInitials": "MM"
 }
