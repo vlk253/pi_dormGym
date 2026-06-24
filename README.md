@@ -17,7 +17,7 @@ Administratori imaju pristup nadzornoj ploči s pregledom svih rezervacija, stat
 
 
 ### [Link na prototip](https://www.figma.com/proto/MLNt8mHMdbTQeWoVS0s4SZ/Untitled?node-id=63-234&t=m7UeLDqVUAwl7RxY-1)
-
+### [Link na stranicu](https://dorm-gym.vercel.app/login)
 
 ### Pristupni podaci
 Korisnici su već registrirani, ali je registracija novih korisnika moguća uz dozvoljene `@student.unipu.hr` ili `@scpu.hr` domene. Identifikacijski broj ustanove (admin registracija) trenutno nema ograničenja za unos.
